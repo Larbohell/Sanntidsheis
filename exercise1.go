@@ -11,25 +11,46 @@ import (
 
 var i int = 0
 
-func thread_1() {
+func thread_1(channel chan int, chfin chan bool) {
 	for j:=0; j<1000000; j++{
-		i++
+		x := <-channel				
+		x++
+		channel <- x
+		//i = <-channel
+		//channel <- i
 	}
+	chfin <- true
+	
 }
 
-func thread_2(){
-
+func thread_2(channel chan int, chfin chan bool){
+	
 	for j:=0; j<1000000; j++{
-		i--
+		x := <-channel				
+		x--
+		channel <- x
+		//i = <-channel
+		//channel <- i
 	}
+	chfin <- true
 }
 
 func main() {
-    runtime.GOMAXPROCS(runtime.NumCPU())
-                                            
-	go thread_1()
-	go thread_2()
+	channel := make(chan int, 1)
+	channel <- i
 
-    time.Sleep(100*time.Millisecond)
-    Println(i)
+	chfin1 := make(chan bool)
+	chfin2 := make(chan bool)
+	
+
+    	runtime.GOMAXPROCS(runtime.NumCPU())
+                                            
+	go thread_1(channel, chfin1)
+	go thread_2(channel, chfin2)
+
+    	//time.Sleep(100*time.Millisecond)
+	//if chfin
+	i = <-channel    	
+	Println(i)
+
 }

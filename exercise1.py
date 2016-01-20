@@ -2,25 +2,31 @@
 # python helloworld_python.py
 
 from threading import Thread
+from threading import Lock
 
 i = 0
 
-def thread_1_func():
+def thread_1_func(lock):
     	global i
 	
 	for j in range(0,1000000):
+		lock.acquire()
 		i+=1 
+		lock.release()
 
-def thread_2_func():
+def thread_2_func(lock):
     	global i
 	
 	for j in range(0,1000000):
-		i-=1
+		lock.acquire()
+		i-=1 
+		lock.release()
 	
 
 def main():
-	thread_1 = Thread(target = thread_1_func, args = ())
-	thread_2 = Thread(target = thread_2_func, args = ())
+	lock = Lock()
+	thread_1 = Thread(target = thread_1_func, args = ([lock]))
+	thread_2 = Thread(target = thread_2_func, args = ([lock]))
 	thread_1.start()
 	thread_2.start()
 
