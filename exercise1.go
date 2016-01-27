@@ -4,53 +4,54 @@
 package main
 
 import (
-    . "fmt"
-    "runtime"
-    "time"
+	. "fmt"
+	//"runtime"
 )
 
-var i int = 0
-
-func thread_1(channel chan int, chfin chan bool) {
-	for j:=0; j<1000000; j++{
-		x := <-channel				
-		x++
-		channel <- x
-		//i = <-channel
-		//channel <- i
+func thread_1(channel chan int, workerDoneCh chan int) {
+	for j := 0; j < 1000000; j++ {
+		channel <- 1
 	}
-	chfin <- true
-	
+	workerDoneCh <- 1
+
 }
 
-func thread_2(channel chan int, chfin chan bool){
-	
-	for j:=0; j<1000000; j++{
-		x := <-channel				
-		x--
-		channel <- x
-		//i = <-channel
-		//channel <- i
+func thread_2(channel chan int, workerDoneCh chan int) {
+	for j := 0; j < 1000000; j++ {
+		channel <- 1
 	}
-	chfin <- true
+	workerDoneCh <- 1
 }
 
 func main() {
-	channel := make(chan int, 1)
-	channel <- i
+	var i int = 0
+	channel1 := make(chan int)
+	channel2 := make(chan int)
+	workerDoneCh := make(chan int)
 
-	chfin1 := make(chan bool)
-	chfin2 := make(chan bool)
-	
+	//runtime.GOMAXPROCS(runtime.NumCPU())
 
-    	runtime.GOMAXPROCS(runtime.NumCPU())
-                                            
-	go thread_1(channel, chfin1)
-	go thread_2(channel, chfin2)
+	go thread_1(channel1, workerDoneCh)
+	go thread_2(channel2, workerDoneCh)
 
-    	//time.Sleep(100*time.Millisecond)
-	//if chfin
-	i = <-channel    	
+
+	const numWorkers = 2
+	numWorkersDone := 0
+	done := false
+	for !done {
+		select {
+		case <-channel1:
+			i++
+		case <-channel2:
+			i--
+		case <-workerDoneCh:
+			Println("worker done")
+			numWorkersDone++
+			if numWorkersDone == numWorkers {
+				done = true
+			}
+		}
+	}
 	Println(i)
 
 }
