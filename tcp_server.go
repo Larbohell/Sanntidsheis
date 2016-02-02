@@ -4,7 +4,7 @@ import "net"
 import "fmt"
 //import "bytes"
 //import "strings"
-import "unicode/utf8"
+//import "unicode/utf8"
 
 
 const (
@@ -21,28 +21,51 @@ func CheckError(err error) {
 
 func main() {
 
+	client_connection := tcp_server_init()
+	
+	for {
+		message :=tcp_server_listen(client_connection)
+		fmt.Println(message)
+	}
+}
+
+func tcp_server_init() (net.Listener){
 	serverListener, err := net.Listen("tcp", CONN_HOST+":"+CONN_PORT)
 	CheckError(err)
+	return serverListener
+}
+
+
+func tcp_server_listen(serverListener net.Listener) (string){
 
 	serverConnection, err := serverListener.Accept();
 	CheckError(err)
 
-	//welcome_message := []byte("Welcome to this server.")
 	welcome_message := []byte("Welcome to this server.")
 	_, err = serverConnection.Write(welcome_message)
 	CheckError(err)
 
-	for {
-		_ = handleRequest(serverConnection)
-	}
+	message := readMessage(serverConnection)
+	serverConnection.Close()
 
+	return message
 }
 
-func handleRequest(connection net.Conn) (int){	
+
+
+func readMessage(connection net.Conn) (string){	
 	incoming_data := make([]byte, 1024)
 	
 	received_message_length, err := connection.Read(incoming_data)
 	CheckError(err)
+	
+	/*
+	if(received_message_length == 0){
+		return 0
+	}
+	*/
+
+	fmt.Println(received_message_length)
 
 	received_message := string(incoming_data[:received_message_length - 1])
 
@@ -53,5 +76,5 @@ func handleRequest(connection net.Conn) (int){
 	_, err = connection.Write(message)
 	CheckError(err)
 	
-	return 1
+	return received_message
 }
