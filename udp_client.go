@@ -10,6 +10,11 @@ func CheckError(err error) {
     }
 }
 
+// Module is able to receive Hello-message from server, at port :30000, this is read into listenBuffer
+// Module is able to send message directly to server, but echoing has not been tested, as 
+// UDPEcho process was not running on server side.
+
+
 
 func main(){
 	//ListenerAddr, err := net.ResolveUDPAddr("udp4", ":30000");
@@ -32,7 +37,10 @@ func main(){
 	//CheckError(err)
 	
 
-	broadcastAddr, err := net.ResolveUDPAddr("udp4", "129.241.187.23:20011")
+	serverAddr, err := net.ResolveUDPAddr("udp4", "129.241.187.23:20011")
+	CheckError(err)
+
+	ListenerAddr, err := net.ResolveUDPAddr("udp4", ":30000")
 	CheckError(err)
 	//conn, err := net.DialUDP("udp", LocalAddr, ServerAddr)
 
@@ -40,11 +48,11 @@ func main(){
 	//CheckError(err)
 
 
-	broadcastConn, err := net.DialUDP("udp4", nil, broadcastAddr)
+	serverConn, err := net.DialUDP("udp4", nil, serverAddr)
 	CheckError(err)
 
 	
-	//listenConn, err := net.ListenUDP("udp4", ListenerAddr)
+	listenConn, err := net.ListenUDP("udp4", ListenerAddr)
 	//buf := make([]byte, 1024)
 	//size, _, err = connListen.ReadFromUDP(buf);
 
@@ -53,17 +61,24 @@ func main(){
 
 	for {
 
-		_ , err := broadcastConn.Write([]byte("hello world\x00"))
+		_ , err := serverConn.Write([]byte("hello world\x00"))
 		CheckError(err)
-
+		/*
 		var readBuffer [1024]byte
-		_, _, error := broadcastConn.ReadFromUDP(readBuffer[0:])
+		_, _, error := serverConn.ReadFromUDP(readBuffer[0:])
+		CheckError(error)
+		*/
+
+		var listenBuffer[1024]byte
+		_, _, error := listenConn.ReadFromUDP(listenBuffer[0:])
 		CheckError(error)
 
 
 		//size, _, error := listenConn.ReadFromUDP(buf);
 		//CheckError(error)
-		fmt.Println("Received ", string(readBuffer[0:1024]))
+		//fmt.Println("Received ", string(readBuffer[0:1024]))
+		fmt.Println("Received ", string(listenBuffer[0:1024]))
+
 		
 		time.Sleep(time.Second * 1)
 
