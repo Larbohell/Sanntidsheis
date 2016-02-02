@@ -2,10 +2,6 @@ package main
 
 import "net"
 import "fmt"
-//import "bytes"
-//import "strings"
-//import "unicode/utf8"
-
 
 const (
     CONN_HOST = "129.241.187.161"	// For work station 8
@@ -21,7 +17,7 @@ func CheckError(err error) {
 
 func main() {
 
-	client_connection := tcp_server_init()
+	client_connection := tcp_server_init(CONN_HOST, CONN_PORT)
 	
 	for {
 		message :=tcp_server_listen(client_connection)
@@ -29,12 +25,11 @@ func main() {
 	}
 }
 
-func tcp_server_init() (net.Listener){
-	serverListener, err := net.Listen("tcp", CONN_HOST+":"+CONN_PORT)
+func tcp_server_init(serverIP string, port string) (net.Listener){
+	serverListener, err := net.Listen("tcp", serverIP+":"+port)
 	CheckError(err)
 	return serverListener
 }
-
 
 func tcp_server_listen(serverListener net.Listener) (string){
 
@@ -51,8 +46,6 @@ func tcp_server_listen(serverListener net.Listener) (string){
 	return message
 }
 
-
-
 func readMessage(connection net.Conn) (string){	
 	incoming_data := make([]byte, 1024)
 	
@@ -65,11 +58,9 @@ func readMessage(connection net.Conn) (string){
 	}
 	*/
 
-	fmt.Println(received_message_length)
-
 	received_message := string(incoming_data[:received_message_length - 1])
 
-	fmt.Println("Incoming message: ", received_message)
+	//fmt.Println("Incoming message: ", received_message)
 
 	message := []byte("Message received.")
 

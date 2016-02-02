@@ -20,12 +20,12 @@ type myStruct struct {
 }
 
 func main(){
-	serverConn := tcp_init("129.241.187.161", "34933")
+	serverConn := tcp_init("129.241.187.159", "34933")
 	tcp_send("hei", serverConn)
 	
 }
 
-func tcp_init(serverIP string, port string) (net.Conn) {
+func tcp_client_init(serverIP string, port string) (net.Conn) {
 	serverConn, err := net.Dial("tcp", serverIP+":"+port);
 	CheckError(err)
 
@@ -43,27 +43,4 @@ func tcp_send(message string, serverConn net.Conn){
 	var response[1020]byte
 	_, err = serverConn.Read(response[0:])
 	CheckError(err)
-
-/*
-	if (string(response) == "Message received."){
-		return true
-	} else {
-		return false
-	}
-*/
 }
-
-
-/*
-	for {
-		reader := bufio.NewReader(os.Stdin)
-		fmt.Println("Enter text: ")
-		inputText, _ := reader.ReadString('\n')
-		
-		_, err = serverConn.Write([]byte(inputText+"\x00"))
-		CheckError(err)
-		
-		
-		fmt.Println(string(listenerBuffer[0:]))
-	}
-*/
