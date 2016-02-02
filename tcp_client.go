@@ -2,9 +2,6 @@ package main
 
 import "net"
 import "fmt"
-//import "bufio"
-//import "os"
-
 
 // Module is able to receive Hello-message from server when connecting
 // Module is able to send message directly to server, and receiving the echo confirming that the
@@ -17,22 +14,56 @@ func CheckError(err error) {
     }
 }
 
-func main(){
-	serverAddr := "129.241.187.23:34933"
+type myStruct struct {
+	FLOOR int
+	elevator_ID int
+}
 
-	serverConn, err := net.Dial("tcp", serverAddr);
+func main(){
+	serverConn := tcp_init("129.241.187.161", "34933")
+	tcp_send("hei", serverConn)
+	
+}
+
+func tcp_init(serverIP string, port string) (net.Conn) {
+	serverConn, err := net.Dial("tcp", serverIP+":"+port);
 	CheckError(err)
 
 	var listenBuffer[1020]byte
 	_, err = serverConn.Read(listenBuffer[0:])
 
 	fmt.Println(string(listenBuffer[0:]))
-	
-	for {
-		_, err = serverConn.Write([]byte("Hello world\x00"))
-		CheckError(err)
-		_, err = serverConn.Read(listenBuffer[0:])
-		CheckError(err)
-		fmt.Println(string(listenBuffer[0:]))
-	}
+	return serverConn
 }
+
+func tcp_send(message string, serverConn net.Conn){
+	_, err := serverConn.Write([]byte(message+"\x00"))
+	CheckError(err)
+
+	var response[1020]byte
+	_, err = serverConn.Read(response[0:])
+	CheckError(err)
+
+/*
+	if (string(response) == "Message received."){
+		return true
+	} else {
+		return false
+	}
+*/
+}
+
+
+/*
+	for {
+		reader := bufio.NewReader(os.Stdin)
+		fmt.Println("Enter text: ")
+		inputText, _ := reader.ReadString('\n')
+		
+		_, err = serverConn.Write([]byte(inputText+"\x00"))
+		CheckError(err)
+		
+		
+		fmt.Println(string(listenerBuffer[0:]))
+	}
+*/
