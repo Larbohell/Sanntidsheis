@@ -1,4 +1,4 @@
-package main
+package network
 
 import "net"
 import "fmt"
@@ -8,7 +8,7 @@ import "fmt"
 
 
 const (
-    CONN_HOST = "129.241.187.161"	// For work station 8
+    CONN_HOST = "129.241.187.159"	// For work station 8
     CONN_PORT = "34933"	// For fixed-length messages
     CONN_TYPE = "tcp"
 )
