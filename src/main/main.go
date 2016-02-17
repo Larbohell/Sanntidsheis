@@ -1,35 +1,90 @@
 package main
-import "driver"
-//import "fmt"
+import "network"
+import "fmt"
+import "strconv"
+import "flag"
+import "os/exec"
+
+const aliveMessage = "I'm alive!(Lars&Bendik)"
+const aliveMessage_length = 23
+const timer_reset_value = 100
+var primary bool
+
+// Problem: Backup doesn't pick up where the primary left, but starts counting from 0.
+// This comes from a problem with converting between strings and ints, that results in
+// last_number_received always being interpreted as 0
+
+
+func CheckError(err error) {
+    if err  != nil {
+        fmt.Println("Error: " , err)
+    }
+}
 
 func main() {
-	driver.Io_init()
 	
-	for {
-		if (driver.Elevator_is_button_pushed(driver.BUTTON_OUTSIDE_UP, 2)){
-			driver.Elevator_set_motor_direction(driver.MOTOR_DIRECTION_DOWN)
-		}
-		if (driver.Elevator_is_button_pushed(driver.BUTTON_OUTSIDE_DOWN, 2)){
-			driver.Elevator_set_motor_direction(driver.MOTOR_DIRECTION_UP)
-		}
+	flag.BoolVar(&primary, "primary", true, "lol")
+	flag.Parse()
+
+	starting_point := 0;
+
+	for{
+		// Primary
+		if (primary == true){
+			spawn_backup();
+			count_and_broadcast(starting_point)
 		
-		if (driver.Elevator_get_stop_signal()){
-			driver.Elevator_set_motor_direction(driver.MOTOR_DIRECTION_STOP)
-		}
-
-		for floor := 0; floor < 4; floor++ {
-			for button := 0; button < 3; button++ {
-			if (driver.Elevator_is_button_pushed(driver.Button(button), floor)){
-				driver.Elevator_set_button_lamp(driver.Button(button), floor, 1)
-				}
-			}
-		}
-		if (driver.Elevator_get_floor_sensor_signal() != -1){
-			driver.Elevator_set_floor_indicator(driver.Elevator_get_floor_sensor_signal())
-		}
-
-		if (driver.Elevator_is_button_pushed(driver.BUTTON_INSIDE_COMMAND, 3)){
-			driver.Elevator_set_door_open_lamp(1)
+		// Backup
+		} else {
+			starting_point = listen()
 		}
 	}
+}
+
+func listen() int {
+	timer := timer_reset_value
+	last_number_received := 0
+
+	for {
+		message := network.Udp_listen(":20011");
+		
+		if (message[:aliveMessage_length] != aliveMessage){
+			timer--
+			//fmt.Println("Timer Decrement")
+		} else if (message[:aliveMessage_length] == aliveMessage) {
+			timer = timer_reset_value
+			last_number_received, _ = strconv.Atoi(message[aliveMessage_length:])
+			//CheckError(err)
+			fmt.Println(message[aliveMessage_length:])
+			//fmt.Println("Last num: " + strconv.Itoa(last_number_received))
+			//fmt.Println(aliveMessage)
+		} 
+		if (timer == 0){
+			fmt.Println("Timer == 0")
+			primary = true
+
+			fmt.Println("Last num: " + strconv.Itoa(last_number_received))
+			return last_number_received
+		}
+	}
+	
+}
+
+func count_and_broadcast(starting_point int){
+	i := starting_point
+	for{
+		if (i%100==0) {
+			network.Udp_broadcast(aliveMessage + strconv.Itoa(i))
+			fmt.Println("Sent: " + strconv.Itoa(i));
+			//fmt.Println(aliveMessage + strconv.Itoa(i))
+		}
+	
+		i++
+	}
+}
+
+func spawn_backup(){
+	run_process_command := exec.Command("gnome-terminal", "-x", "./main", "-primary=0")
+	err := run_process_command.Start()
+	CheckError(err)
 }
